@@ -61,14 +61,18 @@ public class AnalisadorSemantico  {
             
             
         }   
-        variaveis(codigo);                              
+        
+        ArrayList <String> varDecl = new ArrayList<>();
+        varDecl = variaveis(codigo); 
+        System.out.println(varDecl);                             
         funcao(codigo);
         arquivo.close();
         writer.close();
     }
 
-    public static void variaveis(ArrayList<String> codigo){
+    public static ArrayList<String> variaveis(ArrayList<String> codigo){
         ArrayList<String> variaveisDecl = new ArrayList<>();
+        ArrayList<String> variaveisDeclAntes = null;
         
         for (int i = 0; i < codigo.size(); i++){
             String str = codigo.get(i);
@@ -86,17 +90,32 @@ public class AnalisadorSemantico  {
                 erroVariaveis(variaveisDecl, codigo.get(i-1), codigo.get(i+1));
                 
             }
+            else if (str.equals("public")){
+                variaveisDeclAntes = new ArrayList<>(variaveisDecl);
+                variaveisDecl.removeAll(variaveisDecl);
+            }
+            else if (str.matches("[a-zA-Z][a-zA-Z0-9_]*") && codigo.get(i+1).equals("(") &&
+                !codigo.get(i-1).matches("int|new") && !str.matches("main|println")){
+                    for (int j = i+1; j < codigo.size(); j++){
+                        if (codigo.get(j).matches("[a-zA-Z][a-zA-Z0-9_]*") && !variaveisDecl.contains(codigo.get(j))){
+                            System.out.println("Variavel como argumento não declarada: " + codigo.get(j));                            
+                        }
+                        if (codigo.get(j).equals(")")) break;
+
+                    }
+                //System.out.println(str);
+            }
+            
         }
-        
+        //System.out.println(variaveisDeclAntes);
+        return variaveisDeclAntes;
     }
 
     public static void erroVariaveis (ArrayList<String> variaveis, String varNome, String atr){
         
         for (int i = 0; i < variaveis.size(); i++){
             if (varNome.equals(variaveis.get(i))){
-                //System.out.println(atr);
-                //System.out.println(atr.matches("[a-zA-Z][a-zA-Z0-9_]*"));
-                //System.out.println(atr.matches("^[+-]?(\\d+)*"));
+                
                 if (variaveis.get(i-1).equals("int") && !atr.matches("^[+-]?(\\d+)*") && !atr.matches("[a-zA-Z][a-zA-Z0-9_]*")){
                     System.out.println("Erro de atribuição de inteiro: " + atr);
                 }
@@ -177,7 +196,7 @@ public class AnalisadorSemantico  {
         }
 
         for (int i = 0, j = 0; i < parametros.size() && j < parametrosInst.size(); i+=2, j++){
-            if (parametros.get(i).equals("int") && !parametrosInst.get(j).matches("^[+-]?(\\d+)*")){
+            if (parametros.get(i).equals("int") && (!parametrosInst.get(j).matches("^[+-]?(\\d+)*"))){
                 System.out.println("Argumento " + parametrosInst.get(j) + " não é do tipo inteiro");
             }
         }
