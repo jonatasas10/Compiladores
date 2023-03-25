@@ -1,25 +1,23 @@
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.io.File;
-import java.io.PrintWriter;
 import java.util.Scanner;
 
-public class AnalisadorSemantico  {
+
+
+public class AnalisadorSemantico{
     public static void main(String [] args) throws Exception{    
                
         String nome = "arquivo.txt";
         
         File file = new File(nome);
         Scanner arquivo = new Scanner(file);
-        PrintWriter writer = new PrintWriter("Saida.txt", "UTF-8");
         String linha2, aux;
         linha2 = "";
 
         while(arquivo.hasNextLine()){
             aux = arquivo.nextLine();
-            linha2 = linha2 + aux + "\n";  
-
-                    
+            linha2 = linha2 + aux + "\n";                      
         }
         
         // iniciando a leitura do arquivo por linhas
@@ -35,48 +33,45 @@ public class AnalisadorSemantico  {
         
         
         for (String str : comando){
+            
             ArrayList<String> aux1 = new ArrayList<>(Arrays.asList(str.split(delim)));
+            
             for (int i = 0; i < aux1.size(); i++){
+                
                 if (aux1.get(i).matches("\\d+") && aux1.size() > 2 && aux1.get(i+1).equals(".")){
                     String str2 = aux1.get(i) + aux1.get(i+1) + aux1.get(i+2);
-                    codigo.add(str2);
-                    writer.println(str2);
+                    codigo.add(str2);                    
                     i += 2;
                 }
                 else if (aux1.get(i).equals("-")){            
                     
                     String str2 = aux1.get(i) + aux1.get(i+1);
                     
-                    codigo.add(str2);
-                    writer.println(str2);
+                    codigo.add(str2);                    
                     i++;
                 }
                 else{
                     
-                    codigo.add(aux1.get(i));
-                    writer.println(aux1.get(i));
+                    codigo.add(aux1.get(i));                    
                     
                 }
-            }
-            
-            
+            }                       
         }   
         
-        ArrayList <String> varDecl = new ArrayList<>();
-        varDecl = variaveis(codigo); 
-        //System.out.println(varDecl);                             
+        ArrayList <ArrayList<String>> varDecl = new ArrayList<>();
+        varDecl = variaveis(codigo);                                     
         funcao(codigo, varDecl);
         arquivo.close();
-        writer.close();
+        
     }
 
-    public static ArrayList<String> variaveis(ArrayList<String> codigo){
+    public static ArrayList<ArrayList<String>> variaveis(ArrayList<String> codigo){
         ArrayList<String> variaveisDecl = new ArrayList<>();
         ArrayList<String> variaveisDeclAntes = null;
-        
+        ArrayList<ArrayList<String>> retorna = new ArrayList<>();
         for (int i = 0; i < codigo.size(); i++){
-            String str = codigo.get(i);
-            //System.out.println("1".matches("[1-9](\\d+)*"));
+            
+            String str = codigo.get(i);            
             if(str.equals("int") && codigo.get(i+1).matches("[a-zA-Z][a-zA-Z0-9_]*") && codigo.get(i+2).equals("[")
             && codigo.get(i+3).matches("[1-9](\\d+)*") && codigo.get(i+4).equals("]")){
                         variaveisDecl.add("int");
@@ -116,31 +111,26 @@ public class AnalisadorSemantico  {
                         }
                         if (codigo.get(j).equals(")")) break;
 
-                    }
-                //System.out.println(str);
+                    }                
             }
             
         }
-        //System.out.println(variaveisDeclAntes);
-        //System.out.println(variaveisDecl);
-        return variaveisDeclAntes;
+        retorna.add(variaveisDeclAntes);
+        retorna.add(variaveisDecl);
+        return retorna;
     }
 
     public static void erroVariaveis (ArrayList<String> variaveis, String varNome, String atr){
-            //System.out.println(variaveis);
+            
         for (int i = 0; i < variaveis.size(); i++){
             if (varNome.equals(variaveis.get(i))){
-                //System.out.println("------------"+varNome); 
+               
                 if (variaveis.get(i-1).equals("int") && !atr.matches("^[+-]?(\\d+)*") && !atr.matches("[a-zA-Z][a-zA-Z0-9_]*")){
                     System.out.println("Erro de atribuição de inteiro: " + atr);
                 }
                 else if (variaveis.get(i-1).equals("int") && !variaveis.contains(atr) && !atr.matches("^[+-]?(\\d+).*")){
                     System.out.println("Erro de atribuição, variável não declarada: " + atr);
-                }
-                else if (variaveis.get(i).equals("]")){
-                   //System.out.println("------------"+varNome + "--" + atr); 
-                }
-            
+                }                            
             }
             else if (!variaveis.contains(varNome) && !varNome.equals("]")){
                 System.out.println("Erro de atribuição, variável não declarada: " + varNome);
@@ -148,7 +138,7 @@ public class AnalisadorSemantico  {
             }
         }
     }
-//[int, ComputeFac, int, num, int, x, int, y, int, v, [, 5, ], int, num_aux]
+
     public static void errosVetor(ArrayList <String> variaveis, String v, String ind, String atr){
         for (int i = 0; i < variaveis.size(); i++){
             if (variaveis.get(i).equals(v) && variaveis.get(i+2).matches("^[+-]?(\\d+)*")){
@@ -165,8 +155,10 @@ public class AnalisadorSemantico  {
         }
     }
 
-    public static void funcao(ArrayList<String> codigo, ArrayList<String> var){
+    public static void funcao(ArrayList<String> codigo, ArrayList<ArrayList<String>> var){
         ArrayList<String> inteiro = new ArrayList<>();
+        //ArrayList<String> var1 = new ArrayList<>(var.get(0));
+        ArrayList<String> var2 = new ArrayList<>(var.get(1));
         String nomeFuncao = null;
         int inicio = 0, continua = 0;
         for (int i = 0; i < codigo.size(); i++){
@@ -197,9 +189,10 @@ public class AnalisadorSemantico  {
             }
             if (codigo.get(i).equals("return")){
                 if (!variaveisDecl.contains(codigo.get(i+1))){
-                    if (!codigo.get(i+1).matches("^[+-]?(\\d+)*")){
+                    if (!codigo.get(i+1).matches("^[+-]?(\\d+)*") && !var2.contains(codigo.get(i+1))){
                         
                         System.out.println("Erro de atribuição de retorno da função: " + codigo.get(i+1));
+                        
                     }
                 }
                 
@@ -209,9 +202,12 @@ public class AnalisadorSemantico  {
     }
 
     public static void errosParametro(ArrayList<String> codigo, ArrayList<String> parametros, String nomeFuncao,
-    ArrayList<String> var){
+    ArrayList<ArrayList<String>> var){
         int inicio = 0;
         ArrayList<String> parametrosInst = new ArrayList<>();
+        ArrayList<String> var1 = new ArrayList<>(var.get(0));
+        //ArrayList<String> var2 = new ArrayList<>(var.get(1));
+
 
         for (int i = 0; i < codigo.size(); i++){
             if (codigo.get(i).equals(nomeFuncao) && !codigo.get(i-1).equals("int")){
@@ -222,9 +218,7 @@ public class AnalisadorSemantico  {
                 parametrosInst.add(codigo.get(i));
                 if (codigo.get(i+1).equals(")")) break;
             }
-        }
-        //System.out.println(parametros);
-        //System.out.println(parametrosInst);
+        }        
 
         if (parametros.size()/2 != parametrosInst.size()){
             System.out.println("Quantidade desigual de parâmetros da função " + nomeFuncao);
@@ -232,7 +226,7 @@ public class AnalisadorSemantico  {
 
         for (int i = 0, j = 0; i < parametros.size() && j < parametrosInst.size(); i+=2, j++){
             if (parametros.get(i).equals("int") && (!parametrosInst.get(j).matches("^[+-]?(\\d+)*")) &&
-            !var.contains(parametrosInst.get(j)) ){
+            !var1.contains(parametrosInst.get(j)) ){
                 System.out.println("Argumento " + parametrosInst.get(j) + " não é do tipo inteiro");
             }
         }
