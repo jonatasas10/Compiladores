@@ -1,12 +1,19 @@
 class Factorial{
     public static void main(String[] a){
-        int aux;
+        int x;
+        aux;
+
     System.out.println(new Fac().ComputeFac(10, "abc", aux));
 }
 }
 class Fac {
     public int ComputeFac(int num, int x, int y){
         /* Coments123456 */
+        int v[5];
+        v[0] = 5;
+        v[1] = 2.2;
+        v[2] = "abcd";
+        v[5] = 15;
         aux = 5;
         int num_aux ;
         num_aux = y;
